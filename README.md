@@ -22,12 +22,12 @@ Critères de notation:
 - Normes de codage
 
 *****************************************
+## Dans Buildroot_documentation.md
+    Vous trouverez:
 
-## Utilisation de Buildroot
+        Comment utiliser buildroot
 
-## Flasher la carte
-
-## Compilation
+        Comment flasher la carte
 
 *****************************************
 
