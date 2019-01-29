@@ -22,6 +22,8 @@ class GUI(tk.Tk):
         self.data=[]
         self.quit_info = 0
         self.capture = 0 
+        self.servo_connected = 0
+        self.camera_connected = 0
         self.b_quit = tk.Button(master=self, text="Quit", command=self._quit)
         self.b_quit.pack(side=tk.BOTTOM)
 
@@ -57,12 +59,21 @@ class GUI(tk.Tk):
 
 
     def wait_servo(self):
+        if self.quit_info:
+            self._quit()
+        print("Try number ",self.wait_servo_i," for servo")
+        self.servo.settimeout(None)
         try:
-            print('connecting to {} port {}'.format(*self.server_address_servo))
+            self.servo.settimeout(1)
             self.servo.connect(self.server_address_servo)
+            print('connecting to {} port {}'.format(*self.server_address_servo))
             self.wait_servo_i = 0 
+            self.servo_connected = 1 
         except:
-            if self.wait_servo_i>60:
+            if self.servo_connected:
+                self.server_connected = 0
+            if self.wait_servo_i>5:
+                print("Time Out")
                 self._quit()
             else:
                 self.wait_servo_i+=1
@@ -70,12 +81,21 @@ class GUI(tk.Tk):
 
 
     def wait_cam(self):
+        if self.quit_info:
+            self._quit()
+        print("Try number ",self.wait_cam_i," for camera")
+        self.cam.settimeout(None)
         try:
-            print('connecting to {} port {}'.format(*self.server_address_cam))
+            self.cam.settimeout(1)
             self.cam.connect(self.server_address_Cam)
+            print('connecting to {} port {}'.format(*self.server_address_cam))
             self.wait_cam_i = 0
+            self.camera_connected = 1 
         except:
-            if self.wait_cam_i>60:
+            if self.camera_connected:
+                self.camera_connected = 0
+            if self.wait_cam_i>5:
+                print("Time Out")
                 self._quit()
             else:
                 self.wait_cam_i+=1
@@ -83,20 +103,21 @@ class GUI(tk.Tk):
 
 
     def runtime(self):
-        position = self.pos.get()
-        try:
-            self.servo.send(bytes([position]))
-        except:
-            self.wait.servo()
+        if self.servo_connected and self.camera_connected:
+            position = self.pos.get()
+            try:
+                self.servo.send(bytes([position]))
+            except:
+                self.wait_servo()
 
-        try:
-            self.cam.send(bytes([self.capture]))
-        except :
-            self.wait_cam()
-        self.data = self.cam.recv(TAILLE_IMAGE)
-        if len(self.data)==TAILLE_IMAGE :
-            self.image()
-        
+            try:
+                self.cam.send(bytes([self.capture]))
+            except :
+                self.wait_cam()
+            self.data = self.cam.recv(TAILLE_IMAGE)
+            if len(self.data)==TAILLE_IMAGE :
+                self.image()
+            
         if self.quit_info:
             self._quit()
 
