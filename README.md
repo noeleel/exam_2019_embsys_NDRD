@@ -21,6 +21,8 @@ Critères de notation:
 - Utilisation des notions vues en TP (getopt, syslog, signal handler, ...)
 - Normes de codage
 
+//!\\ Pensez aux signaux handlers, etc ... 
+
 *****************************************
 <<<<<<< e5a3b00081d3988994140556edcc8c91a060e3b5
 ## Dans Buildroot_documentation.md
