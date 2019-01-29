@@ -103,7 +103,7 @@ class GUI(tk.Tk):
         self.after(10,self.runtime)
 
     def signal_handler(self,sig, frame):
-        if (sig==2):
+        if (sig==signal.SIGINT or sig==signal.SIGTERM):
             self.quit_info = 1
 
     def switch(self):
@@ -121,5 +121,6 @@ if __name__ == "__main__":
     interface = GUI(IP)
     signal.signal(signal.SIGINT, interface.signal_handler)
     signal.signal(signal.SIGTSTP, interface.signal_handler)
+    signal.signal(signal.SIGTERM, interface.signal_handler)
     interface.mainloop()
 
