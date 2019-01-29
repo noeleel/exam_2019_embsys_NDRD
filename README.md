@@ -22,12 +22,21 @@ Critères de notation:
 - Normes de codage
 
 *****************************************
+<<<<<<< e5a3b00081d3988994140556edcc8c91a060e3b5
 ## Dans Buildroot_documentation.md
     Vous trouverez:
 
         Comment utiliser buildroot
 
         Comment flasher la carte
+=======
+
+## Utilisation de Buildroot
+
+## Flasher la carte
+
+## Compilation
+>>>>>>> Modify README
 
 *****************************************
 
