@@ -13,6 +13,7 @@ import signal
 TAILLE_IMAGE = 2048*1536*3*32
 
 
+
 class GUI(tk.Tk):
     def __init__(self,IP):
         super().__init__()
@@ -23,6 +24,7 @@ class GUI(tk.Tk):
         self.quit_info = 0
         self.capture = 0 
         self.servo_connected = 1
+        self.servo_connected = 0
         self.camera_connected = 0
         self.b_quit = tk.Button(master=self, text="Quit", command=self._quit)
         self.b_quit.pack(side=tk.BOTTOM)
@@ -42,6 +44,7 @@ class GUI(tk.Tk):
 
         self.cam = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_address_cam = (IP, 8080)
+
         self.wait_cam_i = 0
         self.wait_cam()
         self.runtime()
@@ -105,13 +108,14 @@ class GUI(tk.Tk):
 
     def runtime(self):
         if self.servo_connected and self.camera_connected:
+
             """position = self.pos.get()
             try:
                 self.servo.send(bytes([position]))
             except:
                 self.wait_servo()
             """
-
+            
             try:
                 self.cam.send(bytes([self.capture]))
             except :
