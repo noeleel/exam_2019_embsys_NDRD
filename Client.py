@@ -14,7 +14,7 @@ TAILLE_IMAGE = 1
 
 
 class GUI(tk.Tk):
-    def __init__(self,IP):
+    def __init__(self,IP="localhost:9000"):
         super().__init__()
         self.fig = Figure(figsize=(5, 4), dpi=100)
         self.ax = self.fig.add_subplot(111)
