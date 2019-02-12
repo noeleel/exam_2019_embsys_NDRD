@@ -10,7 +10,7 @@ from matplotlib.pyplot import imshow
 import signal
 
 
-TAILLE_IMAGE = 1
+TAILLE_IMAGE = 2048*1536*3*32
 
 
 class GUI(tk.Tk):
@@ -22,7 +22,7 @@ class GUI(tk.Tk):
         self.data=[]
         self.quit_info = 0
         self.capture = 0 
-        self.servo_connected = 0
+        self.servo_connected = 1
         self.camera_connected = 0
         self.b_quit = tk.Button(master=self, text="Quit", command=self._quit)
         self.b_quit.pack(side=tk.BOTTOM)
@@ -34,13 +34,14 @@ class GUI(tk.Tk):
         self.b_switch.pack(side=tk.BOTTOM)        
 
 
-        self.servo = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        """self.servo = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_address_servo = (IP, 10)
         self.wait_servo_i=0
         self.wait_servo()
+        """
 
         self.cam = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_address_cam = (IP, 11)
+        self.server_address_cam = (IP, 8080)
         self.wait_cam_i = 0
         self.wait_cam()
         self.runtime()
@@ -104,19 +105,21 @@ class GUI(tk.Tk):
 
     def runtime(self):
         if self.servo_connected and self.camera_connected:
-            position = self.pos.get()
+            """position = self.pos.get()
             try:
                 self.servo.send(bytes([position]))
             except:
                 self.wait_servo()
+            """
 
             try:
                 self.cam.send(bytes([self.capture]))
             except :
                 self.wait_cam()
             self.data = self.cam.recv(TAILLE_IMAGE)
-            if len(self.data)==TAILLE_IMAGE :
-                self.image()
+            if len(self.data)>=0 :
+                print(self.data)
+                #self.image()
             
         if self.quit_info:
             self._quit()
