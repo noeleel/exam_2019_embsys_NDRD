@@ -5,13 +5,13 @@
 Tout d'abord, téléchargez l'image Docker suivante:
 
 ```` shell
-$ docker pull pblottiere/embsys-rpi3-buildroot
+$ docker pull pblottiere/embsys-rpi3-buildroot-video
 ````
 
 Ensuite, créez un conteneur à partir de cette image:
 
 ```` shell
-$ docker run -it pblottiere/embsys-rpi3-buildroot /bin/bash
+$ docker run -it pblottiere/embsys-rpi3-buildroot-video /bin/bash
 ````
 
 Décompressez la tarball et placez-vous dans ce docker:
@@ -96,12 +96,21 @@ On peut alors copier cette ce bootloader et ce RFS sur notre ordinateur hôte. O
 # mkdir /tmp/rootfs
 # tar -xf output/images/rootfs.tar -C /tmp/rootfs
 ````
+Le nécessaire pour flasher la carte RPI3 avec le support de la caméra est
+alors disponible:
 
-Puis on récupère toute l'arborescence du dossier rootfs sur notre ordinateur hôte via un "docker cp". 
+- `sdcard.img` à flasher sur la carte SD avec la commande `dd`
+- `start_x.elf` et `fixup_x.dat` à copier avec la commande `cp` sur la 1ère
+  partition de la carte SD. A trouver dans "/root/buildroot-precompiled-2017.08/output/build/rpi-firmware-685b3ceb0a6d6d6da7b028ee409850e83fb7ede7/boot"s
 
-```` shell
-$ docker cp <container_id>:/tmp/rootfs/ .
+Il faut finalement modifier le fichier `config.txt` de la 1ère partition
+de la carte SD pour ajouter:
+
 ````
+start_x=1
+gpu_mem=128
+````
+
 
 ***************************************
 

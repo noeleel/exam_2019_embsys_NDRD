@@ -162,7 +162,7 @@ class GUI(tk.Tk):
         self.after(40,self.runtime)
 
     def signal_handler(self,sig, frame):
-        if (sig==signal.SIGINT or sig==signal.SIGTERM):
+        if (sig==signal.SIGINT):
             self.quit_info = 1
 
     def switch(self):
