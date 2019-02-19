@@ -4,7 +4,9 @@ import signal
 #import RPi.GPIO as GPIO
 import time
 import datetime
-
+import syslog
+syslog.openlog("Server_Servomotor")
+print("Message are logged in /var/log/syslog")
 def bytes_to_int(bytes):
     result = 0
     for b in bytes:
@@ -30,6 +32,7 @@ class Servomotor_server():
         string += ("\nServeur hostname : " + str(self.hostname))
         string += ("\nServeur port : " + str(self.port))
         string += ("\n")
+        syslog.syslog(syslog.LOG_INFO, string)
         return string 
 
     def launch(self):
@@ -39,11 +42,13 @@ class Servomotor_server():
     def connect(self):
         self.conn, self.addr = self.socket.accept()
         print("{} connected".format(self.addr))
+        syslog.syslog(syslog.LOG_DEBUG, "{} connected".format(self.addr))
 
     def end_connexion(self):
         self.conn.close()
         self.socket.close()
         print("The connexion has been closed. \n")
+        syslog.syslog(syslog.LOG_ALERT, "The connexion has been closed. \n")
     
     def control_servomotor(self, angle):
         pwm.start(0)
@@ -64,9 +69,11 @@ class Servomotor_server():
         if signum == signal.SIGINT:
             self.end_connexion()
             print(" Servomotor Server Process has been killed! \n")
+            syslog.syslog(syslog.LOG_ERR, " Servomotor Server Process has been killed! \n")
         elif signum == signal.SIGTERM:
             self.end_connexion()
             print(" Servomotor Server Process has been terminated! \n")
+            syslog.syslog(syslog.LOG_ERR, " Servomotor Server Process has been terminated! \n")
 
 if __name__ == "__main__":
     print("Launching " + sys.argv[0])
@@ -74,8 +81,11 @@ if __name__ == "__main__":
     ## Checking user arguments ##
     if len(sys.argv) < 2:
         print("Not enough arguments \n")
+        syslog.syslog(syslog.LOG_ERR, "Not enough arguments \n")
         print("Usage : Servomotor_server gpio_pin hostname port image_buffer_size timeout\n")
+        syslog.syslog(syslog.LOG_ERR, "Usage : Servomotor_server gpio_pin hostname port image_buffer_size timeout\n")
         print("Quitting the program!\n")
+        syslog.syslog(syslog.LOG_ERR, "Quitting the program!\n")
         sys.exit(0)
     if len(sys.argv) > 1:
         if len(sys.argv) == 2:
@@ -126,26 +136,34 @@ if __name__ == "__main__":
 
     ## Listening to the client ##
     while True:
-        ts = time.time()
-        st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
         try:
             # Receive command
             data = Server.conn.recv(Server.buffer_size)
             angle = bytes_to_int(data)
             if angle == 0 :
-                print("[ {} - {} ] Value 0 has been received. Stopping the communication.\n".format(st, Server.addr))
-                print("[ {} - {} ] Client disconnected from server \n".format(st, Server.addr))
-                print("[ {} - {} ] Closing the server\n".format(st, Server.addr))
+                print("[ {} ] Value 0 has been received. Stopping the communication.\n".format( Server.addr))
+                syslog.syslog(syslog.LOG_INFO,"[ {} ] Value 0 has been received. Stopping the communication.\n".format( Server.addr))
+                print("[ {} ] Client disconnected from server \n".format(Server.addr))
+                syslog.syslog(syslog.LOG_INFO, "[ {} ] Client disconnected from server \n".format(Server.addr))
+                print("[ {} ] Closing the server\n".format(Server.addr))
+                syslog.syslog(syslog.LOG_INFO, "[ {} ] Closing the server\n".format(Server.addr))
                 Server.end_connexion()
                 break
             if angle <0 or angle > 180:
-                print("[ {} - {} ] Wrong value for angle : {} \n".format(st, Server.addr, angle))
+                print("[ {} ] Wrong value for angle : {} \n".format(Server.addr, angle))
+                syslog.syslog(syslog.LOG_ERR, "[ {} ] Wrong value for angle : {} \n".format(Server.addr, angle))
             else:
                 # Move the servomotor
                 #Server.control_servomotor()
-                print("[ {} - {} ] Value send is {} \n".format(st, Server.addr, angle))
+                print("[ {} ] Value send is {} \n".format(Server.addr, angle))
+                syslog.syslog(syslog.LOG_INFO, "[ {} ] Value send is {} \n".format(Server.addr, angle))
         except socket.timeout:
-            print("[ {} - {} ] Client disconnected from server \n".format(st, Server.addr))
-            print("[ {} - {} ] Closing the server\n".format(st, Server.addr))
+            print("[ {} ] Client disconnected from server \n".format(Server.addr))
+            syslog.syslog(syslog.LOG_ERR, "[ {} ] Client disconnected from server \n".format(Server.addr))
+            print("[ {} ] Closing the server\n".format(Server.addr))
+            syslog.syslog(syslog.LOG_ERR, "[ {} ] Closing the server\n".format(Server.addr))
             Server.timeout()
-            sys.exit(0)
+            syslog.syslog(syslog.LOG_ERR, "Server timeout, exiting the program...")
+            break
+    
+    sys.exit(0)

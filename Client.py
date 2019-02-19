@@ -10,6 +10,9 @@ from matplotlib.backend_bases import key_press_handler
 from matplotlib.figure import Figure
 from matplotlib.pyplot import imshow
 import signal
+import syslog
+syslog.openlog("Client_Servomotor_Camera")
+print("Message are logged in /var/log/syslog")
 
 
 TAILLE_IMAGE = 2048*1536*3*32
@@ -74,6 +77,7 @@ class GUI(tk.Tk):
             self.servo.settimeout(10)
             self.servo.connect(self.server_address_servo)
             print('connecting to {} port {}'.format(*self.server_address_servo))
+            syslog.syslog(syslog.LOG_INFO, 'connecting to {} port {}'.format(*self.server_address_servo))
             self.wait_servo_i = 0 
             self.servo_connected = 1 
         except:
@@ -81,6 +85,7 @@ class GUI(tk.Tk):
                 self.server_connected = 0
             if self.wait_servo_i>5:
                 print("Time Out")
+                syslog.syslog(syslog.LOG_ERR, "Time Out")
                 self._quit()
             else:
                 self.wait_servo_i+=1
@@ -96,6 +101,7 @@ class GUI(tk.Tk):
             self.cam.settimeout(1)
             self.cam.connect(self.server_address_Cam)
             print('connecting to {} port {}'.format(*self.server_address_cam))
+            syslog.syslog(syslog.LOG_INFO, 'connecting to {} port {}'.format(*self.server_address_cam))
             self.wait_cam_i = 0
             self.camera_connected = 1 
         except:
@@ -103,6 +109,7 @@ class GUI(tk.Tk):
                 self.camera_connected = 0
             if self.wait_cam_i>5:
                 print("Time Out")
+                syslog.syslog(syslog.LOG_ERR, "Time Out")
                 self._quit()
             else:
                 self.wait_cam_i+=1
@@ -125,6 +132,7 @@ class GUI(tk.Tk):
             #self.data = self.cam.recv(TAILLE_IMAGE)
             if len(self.data)>=0 :
                 print("Message sent")
+                syslog.syslog(syslog.LOG_INFO, "Message sent")
                 #print(self.data)
                 #self.image()
             
@@ -136,6 +144,7 @@ class GUI(tk.Tk):
     def signal_handler(self,sig, frame):
         if (sig==signal.SIGINT):
             self.quit_info = 1
+            syslog.syslog(syslog.LOG_ERR, "SIGINT signal received")
 
     def switch(self):
         if self.capture:
