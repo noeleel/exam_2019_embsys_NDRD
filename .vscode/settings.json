@@ -1,0 +1,7 @@
+{
+    "python.linting.pylintEnabled": false,
+    "files.associations": {
+        "socket.h": "c",
+        "inet.h": "c"
+    }
+}
