@@ -94,7 +94,9 @@ class GUI(tk.Tk):
             print('connecting to {} port {}'.format(*self.server_address_servo))
             syslog.syslog(syslog.LOG_INFO, 'connecting to {} port {}'.format(*self.server_address_servo))
             self.wait_servo_i = 0 
-            self.servo_connected = 1 
+            self.servo_connected = 1
+            print("Connection Established with servomotor")
+            syslog.syslog(syslog.LOG_INFO, 'Connection Established with servomotor')
         except:
             if self.servo_connected:
                 self.server_connected = 0
@@ -121,6 +123,7 @@ class GUI(tk.Tk):
             self.wait_cam_i = 0
             self.camera_connected = 1
             print("Connection Established with camera")
+            syslog.syslog(syslog.LOG_INFO, 'Connection Established with camera')
         except Exception as e:
             print(e)
             if self.camera_connected:
@@ -136,7 +139,7 @@ class GUI(tk.Tk):
 
     def runtime(self):
         if self.servo_connected and self.camera_connected:
-                position = self.pos.get()
+            position = self.pos.get()
 
             try:
                 self.servo.send(bytes([position]))
