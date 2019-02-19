@@ -1,6 +1,8 @@
 import socket
 import sys
-import tkinter as tk
+from tkinter import *
+from tkinter.ttk import *
+from tkinter.messagebox import *
 import matplotlib
 matplotlib.use("Agg")
 from matplotlib.backends.backend_tkagg import (
@@ -22,7 +24,7 @@ TAILLE_IMAGE =  40*480*3*8
 
 
 
-class GUI(tk.Tk):
+class GUI(Tk):
     def __init__(self,IP="localhost"):
         super().__init__()
         self.fig = Figure(figsize=(5, 4), dpi=100)
@@ -34,15 +36,38 @@ class GUI(tk.Tk):
         self.servo_connected = 0
         self.camera_connected = 0
         self.receiving = 0
-        self.b_quit = tk.Button(master=self, text="Quit", command=self._quit)
-        self.b_quit.pack(side=tk.BOTTOM)
 
-        self.pos = tk.Scale(self, from_=1, to=180,orient='horizontal')
+        self.Frame_1 = Frame(self, borderwidth=2,relief = GROOVE)
+        self.Frame_2 = Frame(self, borderwidth=2,relief = GROOVE)
+
+        self.Frame_1.pack(side = TOP)
+        self.Frame_2.pack(side = LEFT)
+
+        self.b_quit = Button(master=self.Frame_1, text="Quit", command=self._quit)
+        self.b_quit.pack(side=BOTTOM)
+
+
+        self.pos = Scale(self.Frame_1, from_=0, to=180,orient='horizontal')
         self.pos.pack()
 
-        self.b_switch = tk.Button(self,text="Capture",command=self.switch)
-        self.b_switch.pack(side=tk.BOTTOM)        
+        self.b_switch = Button(self.Frame_1,text="Capture",command=self.switch)
+        self.b_switch.pack(side=BOTTOM)   
 
+        self.label_cam = Label(self.Frame_2,text="Camera Status")
+        self.label_servo = Label(self.Frame_2,text="Servo Status")
+
+        self.led_cam = Label(self.Frame_2,text = "     " ,background = 'red')
+        self.led_servo = Label(self.Frame_2,text = "     " ,background = 'red')
+
+        self.label_cam.grid(column = 0, row = 0,columnspan = 2)
+        self.label_servo.grid(column = 0, row = 1,columnspan = 2)
+
+        self.led_cam.grid(column = 2, row = 0)
+        self.led_servo.grid(column = 2, row = 1)
+        
+        blank = np.zeros((480,640))
+        self.ax.imshow(blank,cmap = "gray")
+        self.canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
 
         self.servo = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_address_servo = (IP, 9000)
@@ -58,7 +83,11 @@ class GUI(tk.Tk):
         self.runtime()
 
     def _quit(self):
-        self.servo.send(bytes([0]))
+        try:
+            print("Quitting program")
+            self.servo.send(bytes([255]))
+        except :
+            pass
         self.servo.close()
         self.cam.close()
         self.quit()     
@@ -80,7 +109,7 @@ class GUI(tk.Tk):
         self.ax.clear()
         self.ax.imshow(image_red,cmap='gray')
         self.canvas.draw()
-        self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        
 
 
     def wait_servo(self):
@@ -95,12 +124,14 @@ class GUI(tk.Tk):
             syslog.syslog(syslog.LOG_INFO, 'connecting to {} port {}'.format(*self.server_address_servo))
             self.wait_servo_i = 0 
             self.servo_connected = 1
+            self.led_servo["background"] = "lawn green"
             print("Connection Established with servomotor")
             syslog.syslog(syslog.LOG_INFO, 'Connection Established with servomotor')
         except:
             if self.servo_connected:
-                self.server_connected = 0
-            if self.wait_servo_i>5:
+                self.led_servo["background"] = "red"
+                self.servo_connected = 0
+            if self.wait_servo_i>10:
                 print("Time Out")
                 syslog.syslog(syslog.LOG_ERR, "Time Out")
                 self._quit()
@@ -122,13 +153,15 @@ class GUI(tk.Tk):
             syslog.syslog(syslog.LOG_INFO, 'connecting to {} port {}'.format(*self.server_address_cam))
             self.wait_cam_i = 0
             self.camera_connected = 1
+            self.led_cam["background"] = "lawn green"
             print("Connection Established with camera")
             syslog.syslog(syslog.LOG_INFO, 'Connection Established with camera')
         except Exception as e:
             print(e)
             if self.camera_connected:
+                self.led_cam["background"] = "red"
                 self.camera_connected = 0
-            if self.wait_cam_i>5:
+            if self.wait_cam_i>10:
                 print("Time Out")
                 syslog.syslog(syslog.LOG_ERR, "Time Out")
                 self._quit()
@@ -189,6 +222,8 @@ class GUI(tk.Tk):
 
 
 if __name__ == "__main__":
+    if len(sys.argv)<2:
+        print("Missing IP")
     IP = sys.argv[1]
     interface = GUI(IP)
     signal.signal(signal.SIGINT, interface.signal_handler)
