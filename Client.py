@@ -1,6 +1,8 @@
 import socket
 import sys
 import tkinter as tk
+import matplotlib
+matplotlib.use("Agg")
 from matplotlib.backends.backend_tkagg import (
     FigureCanvasTkAgg, NavigationToolbar2Tk)
 # Implement the default Matplotlib key bindings.
@@ -15,7 +17,7 @@ TAILLE_IMAGE = 2048*1536*3*32
 
 
 class GUI(tk.Tk):
-    def __init__(self,IP="localhost:9000"):
+    def __init__(self,IP="localhost"):
         super().__init__()
         self.fig = Figure(figsize=(5, 4), dpi=100)
         self.ax = self.fig.add_subplot(111)
@@ -29,27 +31,28 @@ class GUI(tk.Tk):
         self.b_quit = tk.Button(master=self, text="Quit", command=self._quit)
         self.b_quit.pack(side=tk.BOTTOM)
 
-        self.pos = tk.Scale(self, from_=0, to=180,orient='horizontal')
+        self.pos = tk.Scale(self, from_=1, to=180,orient='horizontal')
         self.pos.pack()
 
         self.b_switch = tk.Button(self,text="Capture",command=self.switch)
         self.b_switch.pack(side=tk.BOTTOM)        
 
 
-        """self.servo = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_address_servo = (IP, 10)
+        self.servo = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_address_servo = (IP, 9000)
         self.wait_servo_i=0
         self.wait_servo()
-        """
+
 
         self.cam = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_address_cam = (IP, 8080)
 
-        self.wait_cam_i = 0
-        self.wait_cam()
+        #self.wait_cam_i = 0
+        #self.wait_cam()
         self.runtime()
 
     def _quit(self):
+        self.servo.send(bytes([0]))
         self.servo.close()
         self.cam.close()
         self.quit()     
@@ -66,9 +69,9 @@ class GUI(tk.Tk):
         if self.quit_info:
             self._quit()
         print("Try number ",self.wait_servo_i," for servo")
-        self.servo.settimeout(None)
+        self.servo.settimeout(20)
         try:
-            self.servo.settimeout(1)
+            self.servo.settimeout(10)
             self.servo.connect(self.server_address_servo)
             print('connecting to {} port {}'.format(*self.server_address_servo))
             self.wait_servo_i = 0 
@@ -107,28 +110,28 @@ class GUI(tk.Tk):
 
 
     def runtime(self):
-        if self.servo_connected and self.camera_connected:
-
-            """position = self.pos.get()
+        #if self.servo_connected and self.camera_connected:
+        if self.servo_connected:
+            position = self.pos.get()
             try:
                 self.servo.send(bytes([position]))
             except:
                 self.wait_servo()
-            """
-            
-            try:
-                self.cam.send(bytes([self.capture]))
-            except :
-                self.wait_cam()
-            self.data = self.cam.recv(TAILLE_IMAGE)
+
+            #try:
+            #    self.cam.send(bytes([self.capture]))
+            #except :
+            #    self.wait_cam()
+            #self.data = self.cam.recv(TAILLE_IMAGE)
             if len(self.data)>=0 :
-                print(self.data)
+                print("Message sent")
+                #print(self.data)
                 #self.image()
             
         if self.quit_info:
             self._quit()
 
-        self.after(10,self.runtime)
+        self.after(1000,self.runtime)
 
     def signal_handler(self,sig, frame):
         if (sig==signal.SIGINT):
