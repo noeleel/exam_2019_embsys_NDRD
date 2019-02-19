@@ -31,6 +31,12 @@ Critères de notation:
 
         Comment flasher la carte
 
+## Utilisation de Buildroot
+
+## Flasher la carte
+
+## Compilation
+
 *****************************************
 
 ## Documentation utilisateur
