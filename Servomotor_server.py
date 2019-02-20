@@ -140,8 +140,8 @@ if __name__ == "__main__":
             # Receive command
             data = Server.conn.recv(Server.buffer_size)
             angle = bytes_to_int(data)
-            if angle == 255 :
-                print("[ {} ] Value 255 has been received. Stopping the communication.\n".format( Server.addr))
+            if angle == 0 :
+                print("[ {} ] Value 0 has been received. Stopping the communication.\n".format( Server.addr))
                 syslog.syslog(syslog.LOG_INFO,"[ {} ] Value 0 has been received. Stopping the communication.\n".format( Server.addr))
                 print("[ {} ] Client disconnected from server \n".format(Server.addr))
                 syslog.syslog(syslog.LOG_INFO, "[ {} ] Client disconnected from server \n".format(Server.addr))

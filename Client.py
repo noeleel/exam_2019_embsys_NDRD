@@ -47,7 +47,7 @@ class GUI(Tk):
         self.b_quit.pack(side=BOTTOM)
 
 
-        self.pos = Scale(self.Frame_1, from_=0, to=180,orient='horizontal')
+        self.pos = Scale(self.Frame_1, from_=1, to=180,orient='horizontal')
         self.pos.pack()
 
         self.b_switch = Button(self.Frame_1,text="Capture",command=self.switch)
@@ -85,7 +85,7 @@ class GUI(Tk):
     def _quit(self):
         try:
             print("Quitting program")
-            self.servo.send(bytes([255]))
+            self.servo.send(bytes([0]))
         except :
             pass
         self.servo.close()
@@ -137,7 +137,7 @@ class GUI(Tk):
                 self._quit()
             else:
                 self.wait_servo_i+=1
-                self.after(1000,self.wait_servo)
+                self.after(10000,self.wait_servo)
 
 
     def wait_cam(self):
@@ -167,18 +167,33 @@ class GUI(Tk):
                 self._quit()
             else:
                 self.wait_cam_i+=1
-                self.after(1000,self.wait_cam)
+                self.after(10000,self.wait_cam)
         
 
     def runtime(self):
-        if self.servo_connected and self.camera_connected:
-            position = self.pos.get()
-
+        self.runtime_servo()
+        self.runtime_camera()
+    
+    def runtime_servo(self):
+        if self.servo_connected:
+            position = int(self.pos.get())
+            if position == 0:
+                position = 1
             try:
+                print(position)
                 self.servo.send(bytes([position]))
             except:
                 self.wait_servo()
+        else:
+            self.wait_servo()
+        
+        if self.quit_info:
+            self._quit()
 
+        self.after(1000,self.runtime_servo)
+
+    def runtime_camera(self):
+        if self.camera_connected:
             try:
                 if not self.capture or self.receiving:
                     self.cam.send(b"0")
@@ -200,11 +215,13 @@ class GUI(Tk):
             if self.receiving:
                 temp = np.array([self.data[i] for i in range(len(self.data))])
                 self.image_recupe = np.concatenate((self.image_recupe,temp))
-            
+        else:
+            self.wait_cam()
+
         if self.quit_info:
             self._quit()
 
-        self.after(40,self.runtime)
+        self.after(40,self.runtime_camera)
 
     def signal_handler(self,sig, frame):
         if (sig==signal.SIGINT):
@@ -224,6 +241,8 @@ class GUI(Tk):
 if __name__ == "__main__":
     if len(sys.argv)<2:
         print("Missing IP")
+        syslog.syslog(syslog.LOG_ERR, "Missing IP \n")
+        sys.exit(0)
     IP = sys.argv[1]
     interface = GUI(IP)
     signal.signal(signal.SIGINT, interface.signal_handler)
