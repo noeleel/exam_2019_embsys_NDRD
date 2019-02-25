@@ -19,7 +19,7 @@ syslog.openlog("Client_Servomotor_Camera")
 print("Message are logged in /var/log/syslog")
 
 
-TAILLE_IMAGE =  40*480*3*8
+TAILLE_IMAGE =  40*480*3*8 #Taille du Buffer pour la recuperation
 
 
 
@@ -85,7 +85,7 @@ class GUI(Tk):
     def _quit(self):
         try:
             print("Quitting program")
-            self.servo.send(bytes([0]))
+            self.servo.send(bytes([0])) #envoie d'une commande pour indiquer au servo l'arrêt
         except :
             pass
         self.servo.close()
@@ -103,15 +103,13 @@ class GUI(Tk):
             else:
                 image.append(number)
                 number = 0
-        image_red = np.array(image[2:640*480+2]).reshape((480,640))
-        image = np.zeros((480,640,3))
-        image[:,:,0] = image_red
+        image = np.array(image[2:640*480+2]).reshape((480,640))#recuperation de l'image parmi les données envoyées
         self.ax.clear()
-        self.ax.imshow(image_red,cmap='gray')
+        self.ax.imshow(image,cmap='gray')
         self.canvas.draw()
         
 
-
+    #Fonction pour attendre un connexion entre le camera et le servo
     def wait_servo(self):
         if self.quit_info:
             self._quit()
@@ -139,7 +137,7 @@ class GUI(Tk):
                 self.wait_servo_i+=1
                 self.after(10000,self.wait_servo)
 
-
+    #Fonction pour attendre un connexion entre le camera et le client
     def wait_cam(self):
         if self.quit_info:
             self._quit()
@@ -171,8 +169,8 @@ class GUI(Tk):
         
 
     def runtime(self):
-        self.runtime_servo()
-        self.runtime_camera()
+        self.runtime_servo()#Fonction appelé toutes les secondes pour l'envoi de données au servomoteur
+        self.runtime_camera()#Fonction appelé toutes les 40ms  pour l'envoi et la reception de données avec la caméra
     
     def runtime_servo(self):
         if self.servo_connected:
@@ -223,11 +221,13 @@ class GUI(Tk):
 
         self.after(40,self.runtime_camera)
 
+    #Gere les différents signaux et met la varaiable self.quit_info à true pour arréter proprement le programme
     def signal_handler(self,sig, frame):
-        if (sig==signal.SIGINT):
+        if (sig==signal.SIGINT or sig==signal.SIGTSTP or sig==sig.SIGTERM):
             self.quit_info = 1
             syslog.syslog(syslog.LOG_ERR, "SIGINT signal received")
 
+    #Permet de lancer ou d'arreter la capture
     def switch(self):
         if self.capture:
             self.capture = 0
