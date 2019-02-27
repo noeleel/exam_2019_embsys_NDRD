@@ -45,6 +45,7 @@
 #include <getopt.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <syslog.h>
 #include <errno.h>
 #include <malloc.h>
 #include <sys/stat.h>
@@ -90,14 +91,7 @@ typedef enum {
 
 #include <sys/socket.h> 
 #include <netinet/in.h> 
-#define PORT 8080 
-
-
-
-
-
-
-
+#define PORT 7000 // Port par défaut
 
 
 struct buffer {
@@ -170,6 +164,7 @@ static int xioctl(int fd, int request, void* argp)
 }
 
 /*	Write image to jpeg file.	\param img image to write*/
+/*
 static void jpegWrite(unsigned char* img, char* jpegFilename)
 {
 	struct jpeg_compress_struct cinfo;
@@ -216,7 +211,7 @@ static void jpegWrite(unsigned char* img, char* jpegFilename)
 
 	// close output file
 	fclose(outfile);
-}
+}*/
 
 
 
@@ -283,28 +278,6 @@ static void imageProcess(const void* p, struct timeval timestamp, int new_socket
 	
 	strcpy(buff3, "");
 
-
-	/*
-	for (i=0; i<15; i++){
-		printf("i = %d\n", i);
-		valread = read( new_socket , buffer, 1024);
-		printf("msg client : %s\n",buffer ); 
-	
-		tab = src+i*len_msg;
-		printf("tab :");
-		for (j=0;j<(sizeof(tab)); j++)
-		{
-			printf(" %d ", tab[j]);
-			sprintf(buff2, "%d ", tab[j]);
-			strcat(buff3, buff2);
-		}
-		printf("\n");
-		printf("buff3 %s\n", buff3);
-	 	int ok = send(new_socket , tab , strlen(tab) , 0 ); 
-	 	printf("message sent %d\n", ok);
-	}*/
-
-
 	if(continuous==1) {
 		static uint32_t img_ind = 0;
 		int64_t timestamp_long;
@@ -315,7 +288,7 @@ static void imageProcess(const void* p, struct timeval timestamp, int new_socket
 
 
 	// write jpeg
-	jpegWrite(dst,jpegFilename);
+	// jpegWrite(dst,jpegFilename);
 
 
 
@@ -904,6 +877,7 @@ static void usage(FILE* fp, int argc, char** argv)
 	fprintf(fp,
 		"Usage: %s [options]\n\n"
 		"Options:\n"
+		"-p | --port					RPi Port on which the camera server will be launched\n"
 		"-d | --device name   Video device name [/dev/video0]\n"
 		"-h | --help          Print this message\n"
 		"-o | --output        Set JPEG output filename\n"
@@ -924,6 +898,7 @@ static const char short_options [] = "d:ho:q:mruW:H:I:vc";
 
 static const struct option
 long_options [] = {
+	{ "port",     	optional_argument,      NULL,           'p' },
 	{ "device",     required_argument,      NULL,           'd' },
 	{ "help",       no_argument,            NULL,           'h' },
 	{ "output",     required_argument,      NULL,           'o' },
@@ -940,7 +915,12 @@ long_options [] = {
 };
 
 int main(int argc, char **argv)
-{
+{	
+	int port = PORT;
+	char logTxt[]="test";
+	openlog(logTxt, LOG_CONS|LOG_PID, LOG_LOCAL7);
+	syslog(LOG_DEBUG, "Ceci est un essai...");
+  closelog();
 
 	for (;;) {
 		int index, c = 0;
@@ -952,6 +932,10 @@ int main(int argc, char **argv)
 
 		switch (c) {
 			case 0: /* getopt_long() flag */
+				break;
+
+			case 'p':
+				port = optarg;
 				break;
 
 			case 'd':
@@ -1071,7 +1055,7 @@ int main(int argc, char **argv)
 	  exit(EXIT_FAILURE); 
 	} 
 	 
-	// Forcefully attaching socket to the port 8080 
+	// Forcefully attaching socket to the port 7000 
 	if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, 
 		                                         &opt, sizeof(opt))) 
 	{ 
@@ -1080,9 +1064,9 @@ int main(int argc, char **argv)
 	} 
 	address.sin_family = AF_INET; 
 	address.sin_addr.s_addr = INADDR_ANY; 
-	address.sin_port = htons( PORT ); 
+	address.sin_port = htons( port ); 
 	 
-	// Forcefully attaching socket to the port 8080 
+	// Forcefully attaching socket to the port 7000 
 	if (bind(server_fd, (struct sockaddr *)&address,  
 		                        sizeof(address))<0) 
 	{ 

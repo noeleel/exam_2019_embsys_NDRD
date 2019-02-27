@@ -1,5 +1,6 @@
 import socket
 import sys
+import getopt
 from tkinter import *
 from tkinter.ttk import *
 from tkinter.messagebox import *
@@ -25,7 +26,7 @@ TAILLE_IMAGE =  40*480*3*8 #Taille du Buffer pour la recuperation
 
 
 class GUI(Tk):
-    def __init__(self,IP="localhost"):
+    def __init__(self,IP="localhost", port_serveur_servo = 9000, port_serveur_camera = 7000):
         super().__init__()
         self.fig = Figure(figsize=(5, 4), dpi=100)
         self.ax = self.fig.add_subplot(111)
@@ -70,14 +71,14 @@ class GUI(Tk):
         self.canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
 
         self.servo = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_address_servo = (IP, 9000)
+        self.server_address_servo = (IP, port_serveur_servo)
         self.wait_servo_i=0
         self.wait_servo()
         
 
 
         self.cam = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_address_cam = (IP, 8080)
+        self.server_address_cam = (IP, port_serveur_camera)
         self.wait_cam_i = 0
         self.wait_cam()
         self.runtime()
@@ -239,14 +240,53 @@ class GUI(Tk):
 
 
 if __name__ == "__main__":
-    if len(sys.argv)<2:
-        print("Missing IP")
-        syslog.syslog(syslog.LOG_ERR, "Missing IP \n")
-        sys.exit(0)
-    IP = sys.argv[1]
-    interface = GUI(IP)
+    print("Launching " + sys.argv[0])
+    IP = "localhost"
+    port_camera = 7000
+    port_servomoteur = 9000
+    syslog.syslog(syslog.LOG_INFO, "Launching " + sys.argv[0] + "\n")
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "hisc", ["help", "ip", "port_servomoteur", "port_camera"])
+    except getopt.GetoptError as err:
+        print(err)
+        print("\n")
+        print("Wrong arguments or Not enough arguments")
+        print("Usage :")
+        print("Servomotor_servo -i ip -s port_servomoteur -c port_camera")
+        print(" or ")
+        print("Servomotor_servo -ip ip -port_servomoteur port_servomoteur -port_camera port_camera")
+        print("Quitting the program!")
+        syslog.syslog(syslog.LOG_ERR, "Quitting the program!\n")
+        sys.exit(2)
+    for o, a in opts:
+        if o in ("-h", "--help"):
+            print("Options and arguments : ")
+            print("-h or --help : Display this help message")
+            print("-i or --ip : Default is localhost. Ip Address of the RPi on which the server is running. ")
+            print("-s or --port_servomoteur : Default is 9000. Port of the RPi on which the server managing the servomotor is running ")
+            print("-c or --port_camera : Default is 7000. Port of the RPi on which the server managing the camera is running")
+            print("\n")
+            print("Usage :")
+            print("Servomotor_servo -i ip -s port_servomoteur -c port_camera")
+            print(" or ")
+            print("Servomotor_servo -ip ip -port_servomoteur port_servomoteur -port_camera port_camera")
+            print("Quitting the program!")
+            syslog.syslog(syslog.LOG_ERR, "Quitting the program!\n")
+            sys.exit()
+        elif o in ("-i", "--ip"):
+            IP = a
+        elif o in ("-s", "--port_servomoteur"):
+            port_servomoteur = a
+        elif o in ("-c", "--port_camera"):
+            port_camera = a
+        else:
+            assert False, "unhandled option"
+            print("Quitting the program!")
+            syslog.syslog(syslog.LOG_ERR, "Quitting the program!\n")
+            sys.exit(1)
+
+    interface = GUI(IP, port_servomoteur, port_camera)
     signal.signal(signal.SIGINT, interface.signal_handler)
     signal.signal(signal.SIGTSTP, interface.signal_handler)
     signal.signal(signal.SIGTERM, interface.signal_handler)
     interface.mainloop()
-

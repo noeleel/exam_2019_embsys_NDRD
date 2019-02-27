@@ -1,5 +1,6 @@
 import socket
 import sys
+import getopt
 import signal
 #import RPi.GPIO as GPIO
 import time
@@ -14,7 +15,7 @@ def bytes_to_int(bytes):
     return result
 
 class Servomotor_server():
-    def __init__(self, host = "localhost", port = 9000, buffer_size = 1024, timeout = 10):
+    def __init__(self, host = "localhost", port = 9000, buffer_size = 1024, timeout = 300):
         self.hostname = host
         self.port = port
         self.buffer_size = buffer_size
@@ -45,7 +46,8 @@ class Servomotor_server():
         syslog.syslog(syslog.LOG_DEBUG, "{} connected".format(self.addr))
 
     def end_connexion(self):
-        self.conn.close()
+        if not (self.conn is None):
+            self.conn.close()
         self.socket.close()
         print("The connexion has been closed. \n")
         syslog.syslog(syslog.LOG_ALERT, "The connexion has been closed. \n")
@@ -68,51 +70,87 @@ class Servomotor_server():
     def signal_handler(self,signum, frame):
         if signum == signal.SIGINT:
             self.end_connexion()
+            print("SIGINT signal raised!")
             print(" Servomotor Server Process has been killed! \n")
             syslog.syslog(syslog.LOG_ERR, " Servomotor Server Process has been killed! \n")
         elif signum == signal.SIGTERM:
             self.end_connexion()
+            print("SIGTERM signal raised!")
             print(" Servomotor Server Process has been terminated! \n")
             syslog.syslog(syslog.LOG_ERR, " Servomotor Server Process has been terminated! \n")
+        elif signum == signal.SIGTSTP:
+            self.end_connexion()
+            print("SIGTSTP signal raised!")
+            print(" Servomotor Server Process has been stopped! \n")
+            syslog.syslog(syslog.LOG_ERR, " Servomotor Server Process has been stopped! \n")
 
 if __name__ == "__main__":
     print("Launching " + sys.argv[0])
-
-    ## Checking user arguments ##
-    if len(sys.argv) < 2:
-        print("Not enough arguments \n")
-        syslog.syslog(syslog.LOG_ERR, "Not enough arguments \n")
-        print("Usage : Servomotor_server gpio_pin hostname port image_buffer_size timeout\n")
-        syslog.syslog(syslog.LOG_ERR, "Usage : Servomotor_server gpio_pin hostname port image_buffer_size timeout\n")
-        print("Quitting the program!\n")
+    syslog.syslog(syslog.LOG_INFO, "Launching " + sys.argv[0] + "\n")
+    #Default argument value (for initialization)
+    gpio_pin = None
+    host = "localhost"
+    port = 9000
+    buffer_size = 1024
+    timeout = 300
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "hgipbt", ["help", "gpio_pin", "ip", "port", "buffer_size", "timeout"])
+    except getopt.GetoptError as err:
+        print(err)
+        print("\n")
+        print("Wrong arguments or Not enough arguments")
+        print("Usage :")
+        print("Servomotor_servo -g gpio_pin -i hostname -p port -b buffer_size -t timeout")
+        print(" or")
+        print("Servomotor_servo -gpio_pin gpio_pin --ip hostname --port port --buffer_size buffer_size --timeout timeout")
+        print("Quitting the program!")
         syslog.syslog(syslog.LOG_ERR, "Quitting the program!\n")
-        sys.exit(0)
-    if len(sys.argv) > 1:
-        if len(sys.argv) == 2:
-            gpio_pin = sys.argv[1]
-            Server = Servomotor_server()
-        elif len(sys.argv) == 3:
-            gpio_pin = sys.argv[1]
-            host = sys.argv[2]
-            Server = Servomotor_server(host)
-        elif len(sys.argv) == 4:
-            gpio_pin = sys.argv[1]
-            host = sys.argv[2]
-            port = sys.argv[3]
-            Server = Servomotor_server(host, port)
-        elif len(sys.argv) == 5:
-            gpio_pin = sys.argv[1]
-            host = sys.argv[2]
-            port = sys.argv[3]
-            buffer_size = sys.argv[4]
-            Server = Servomotor_server(host, port, buffer_size)
-        elif len(sys.argv) == 6:
-            gpio_pin = sys.argv[1]
-            host = sys.argv[2]
-            port = sys.argv[3]
-            buffer_size = sys.argv[4]
-            timeout = sys.argv[5]
-            Server = Servomotor_server(host, port, buffer_size, timeout)
+        sys.exit(2)
+    for o, a in opts:
+        if o in ("-h", "--help"):
+            print("Options and arguments : ")
+            print("-h or --help : Display this help message")
+            print("-g or --gpio_pin : Required. Board pin of the RPi to which the servomotor pin control will be attached")
+            print("-i or --ip : Default is localhost. Ip Address of the RPi on which the server is running. ")
+            print("-p or --port : Default is 9000. Port of the RPi on which the server is running")
+            print("-b or --buffer_size : Default is 1024. Buffer size in bytes for receiving the command data for the client")
+            print("-t or --timeout : Default is 300. Time in seconds before the server will end.")
+            print("\n")
+            print("Usage :")
+            print("Servomotor_servo -g gpio_pin -i hostname -p port -b buffer_size -t timeout")
+            print(" or")
+            print("Servomotor_servo -gpio_pin gpio_pin --ip hostname --port port --buffer_size buffer_size --timeout timeout")
+            print("Quitting the program!")
+            syslog.syslog(syslog.LOG_ERR, "Quitting the program!\n")
+            sys.exit()
+        elif o in ("-g", "--gpio_pin"):
+            gpio_pin = a
+        elif o in ("-i", "--ip"):
+            host = a
+        elif o in ("-p", "--port"):
+            port = a
+        elif o in ("-b", "--buffer_size"):
+            buffer_size = a
+        elif o in ("-t", "--timeout"):
+            timeout = a
+        else:
+            assert False, "unhandled option"
+            print("Quitting the program!")
+            syslog.syslog(syslog.LOG_ERR, "Quitting the program!\n")
+            sys.exit(1)
+    
+    if not (gpio_pin is None):
+        Server = Servomotor_server(host, port, buffer_size, timeout)
+    else:
+        print("Missing gpio_pin")
+        print("Usage :")
+        print("Servomotor_servo -g gpio_pin -i hostname -p port -b buffer_size -t timeout")
+        print(" or ")
+        print("Servomotor_servo -gpio_pin gpio_pin --ip hostname --port port --buffer_size buffer_size --timeout timeout")
+        print("Quitting the program!")
+        syslog.syslog(syslog.LOG_ERR, "Quitting the program!\n")
+        sys.exit(2)
+
 
 
     ## Setting GPIO and PWM up ##
