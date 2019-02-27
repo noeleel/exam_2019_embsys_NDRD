@@ -1,0 +1,17 @@
+Test*
+camera.jpeg
+image.txt
+Makefile.in
+aclocal.m4
+autom4te.cache/
+config.h.in
+config/
+configure
+Makefile
+config.h
+config.status
+libtool
+m4/
+stamp-h1
+.deps
+.dirstamp/

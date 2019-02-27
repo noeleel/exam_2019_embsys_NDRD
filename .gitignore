@@ -1,3 +1,17 @@
 Test*
 camera.jpeg
 image.txt
+v4l2grab-master/Makefile.in
+v4l2grab-master/aclocal.m4
+v4l2grab-master/autom4te.cache/
+v4l2grab-master/config.h.in
+v4l2grab-master/config/
+v4l2grab-master/configure
+v4l2grab-master/Makefile
+v4l2grab-master/config.h
+v4l2grab-master/config.status
+v4l2grab-master/libtool
+v4l2grab-master/m4/
+v4l2grab-master/stamp-h1
+v4l2grab-master/.deps
+v4l2grab-master/.dirstamp/

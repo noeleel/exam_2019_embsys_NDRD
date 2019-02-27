@@ -22,7 +22,6 @@ Décompressez la tarball et placez-vous dans ce docker:
 # cd buildroot-precompiled-2017.08
 ````
 
-## Comment utiliser buildroot
 **Cette partie se passe dans le docker.**
 
 Afin d'obtenir la version de buildroot compilée pour l'architecture voulue, lancer la commande:
