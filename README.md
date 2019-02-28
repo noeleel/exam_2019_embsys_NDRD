@@ -2,9 +2,16 @@
 
 Repository git pour le projet embsys, fait par DO ROSARIO Maxime, DELMAS Sarah, NOELE Elodie. 
 
-
+# Summary
+1. [Dans Buildroot_documentation.md](#paragraph1)
+2. [Comment flasher la carte](#paragraph2)
+3. [Fonctionnement de l'ensemble de l'application](#paragraph3)
+4. [Compilation du serveur caméra](#paragraph4)
+5. [Documentation utilisateur](#paragraph5)
+6. [Modification de l'IP de la Raspberry](#paragraph6)
+ 
 *****************************************
-## Dans Buildroot_documentation.md
+## 1. Dans Buildroot_documentation.md <a name="paragraph1"></a>
 
 **Cette partie se passe dans le docker.**
 
@@ -116,7 +123,7 @@ start_x=1
 gpu_mem=128
 ````
 
-## Comment flasher la carte
+## 2. Comment flasher la carte <a name="paragraph2"></a>
 
 Tout d'abord récupérer l'image complet de la carte SD du conteneur Docker sur
 votre machine hôte:
@@ -146,7 +153,7 @@ A chaque démarrage de la RPi, lancer la commande :
 ```` shell
 $ modprobe bcm2835-v4l2
 ````
-## Compilation du serveur caméra
+## 3. Compilation du serveur caméra <a name="paragraph3"></a>
 
     Pour mettre en place le serveur caméra, nous avons utilisé et modifié le code de : 
     https://github.com/twam/v4l2grab.  Les options de compilation sont spécifiées ici : https://www.gnu.org/software/autoconf/manual/autoconf-2.69/html_node/Hosts-and-Cross_002dCompilation.html.
@@ -181,7 +188,7 @@ $ make install
         $ sudo docker cp <container_id>:/root/v4l2grab-master/v4l2grab .
         ````
 
-## Fonctionnement de l'ensemble de l'application
+## 4. Fonctionnement de l'ensemble de l'application <a name="paragraph4"></a>
 
     Le serveur client fonctionne sous Python3.6 (pour Tkinter).
     Le serveur caméra fonctionne en C.
@@ -199,7 +206,7 @@ $ make install
 
 *****************************************
 
-## Documentation utilisateur
+## 5. Documentation utilisateur <a name="paragraph5"></a>
 
     Pour lancer le programme, sur la RPi :
 
@@ -212,7 +219,7 @@ $ make install
     
         python3.6 Client.py
 
-## Serveur servomoteur
+## Serveur servomoteur 
 
     Pour lancer le serveur servomoteur, sur la RPi, il faut lancer la commande suivante:
         python Servomotor_server.py.
@@ -226,7 +233,7 @@ $ make install
         -b or --buffer_size     | Default is 1024. Buffer size in bytes for receiving the command data for the client
         -t or --timeout         | Default is 300. Time in seconds before the server will end. 
 
-## Client
+## Client 
 
     La capture d'image se passe sous la forme d'une vidéo/diaporama (de l'ordre de l'image par secondes)
 
@@ -257,7 +264,7 @@ $ make install
 
 *****************************************
 
-## Modification de l'IP de la Raspberry
+## 6. Modification de l'IP de la Raspberry <a name="paragraph6"></a>
 
     L'adresse Ip de la carte Raspberry a été configurée de manière statique sur l'IP "192.168.1.20".
     Si cette Ip n'appartient à votre réseau ou est déjà utilisé, vous pouvez la modifier en modifiant le
