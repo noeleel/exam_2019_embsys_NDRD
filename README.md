@@ -137,16 +137,15 @@ Ensuite, branchez l'adaptateur USB-TTL sur les ports TX/RX et ouvrez un
 terminal série (gtkterm, minicom, ...). Finalement, connectez vous au réseau
 avec un cable Ethernet, insérez la carte SD et démarrez la RPI3.
 
-Pour vous connecter en *user*:
-
-    Login: user
-    MdP: user1* 
-
 Pour vous connecter en *root*:
 
     Login: root
     MdP: root1* 
 
+A chaque démarrage de la RPi, lancer la commande :
+```` shell
+$ modprobe bcm2835-v4l2
+````
 ## Compilation du serveur caméra
 
     Pour mettre en place le serveur caméra, nous avons utilisé et modifié le code de : 
@@ -154,26 +153,28 @@ Pour vous connecter en *root*:
     La compilation se fera exclusivement dans le docker utilisé par buildroot.
 
     Après modification du code, on met en place le docker:
-        ```` shell
-        $ sudo docker rmi pblottiere/embsys-rpi3-buildroot-video
-        $ sudo docker pull pblottiere/embsys-rpi3-buildroot-video
-        $ sudo docker run -it pblottiere/embsys-rpi3-buildroot-video /bin/bash
-        # cd /root/
-        # tar zxvf buildroot-precompiled-2017.08.tar.gz
-        # apt update
-        # apt upgrade
-        # apt install nano
-        ````
-    Pour la cross-compilation, on copie les fichiers de v4l2grab-master dans le docker avec la commande suivante:
-        ```` shell
-        $ sudo docker cp v4l2grab-master <container_id>:/root/ .
-        $ cd v4l2grab-master
-        $ ./autogen.sh
-        $ ./configure CC=~/buildroot-precompiled-2017.08/output/host/usr/bin/arm-linux-gcc --host=arm-buildroot-linux-uclibcgnueabihf --build=linux 
-        $ make
-        // en cas d'erreur dans le make, modifier le fichier config.h et mettre #define HAVE_MALLOC 0 à /// #define HAVE_MALLOC 1 et commenter #define malloc rpl_malloc
-        $ make install
-        ````
+
+```` shell
+$ sudo docker rmi pblottiere/embsys-rpi3-buildroot-video
+$ sudo docker pull pblottiere/embsys-rpi3-buildroot-video
+$ sudo docker run -it pblottiere/embsys-rpi3-buildroot-video /bin/bash
+# cd /root/
+# tar zxvf buildroot-precompiled-2017.08.tar.gz
+# apt update
+# apt upgrade
+# apt install nano
+````
+
+    Pour la cross-compilation, on copie les fichiers de v4l2grab-master dans le docker avec la commande suivante: (en cas d'erreur dans le make, modifier le fichier config.h et mettre #define HAVE_MALLOC 0 à #define HAVE_MALLOC 1 et commenter #define malloc rpl_malloc)
+    
+```` shell
+$ sudo docker cp v4l2grab-master <container_id>:/root/ .
+$ cd v4l2grab-master
+$ ./autogen.sh
+$ ./configure CC=~/buildroot-precompiled-2017.08/output/host/usr/bin/arm-linux-gcc --host=arm-buildroot-linux-uclibcgnueabihf --build=linux 
+$ make
+$ make install
+````
 
     Après cross-compilation, on peut récupérer le binaire pour le mettre sur la carte SD. Après s'être placé sur le dossier /home/user de la RPi:
         ```` shell
@@ -186,6 +187,15 @@ Pour vous connecter en *root*:
     Le serveur caméra fonctionne en C.
     Le serveur servomoteur fonctionne sous Python2.7 (pour la Raspberry).
 
+    Le serveur client est chargé de gérer à la fois le serveur caméra et le serveur servomoteur à travers le runtime. Au bout de 10 tentatives de connexions infructueuses avec l'un des deux, le serveur client s'arrête. 
+
+    Le serveur servomoteur gère le servomoteur au moyen du PWM. Il reçoit la commande en angle du serveur client en bytes qu'il convertit en degrés. Ce serveur s'arrête dès que le client se déconnecte ou qu'aucun client ne s'est connecté en l'espace de 5 minutes.
+
+    Le serveur caméra prend des photographies via la librarie libv4l2. Il les envoie ensuite par
+    paquets réguliers, toutes les 40 ms, au serveur client lorsqu'il reçoit la commande. 
+    Pour arrêter ce serveur, il faut lui envoyer un signal SIGKILL. 
+
+    Pour chaque photographie prise, celle-ci s'affichera dans l'interface graphique Tkinter. 
 
 *****************************************
 
