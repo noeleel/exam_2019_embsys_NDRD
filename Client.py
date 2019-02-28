@@ -26,7 +26,7 @@ TAILLE_IMAGE =  40*480*3*8 #Taille du Buffer pour la recuperation
 
 
 class GUI(Tk):
-    def __init__(self,IP="localhost", port_serveur_servo = 9000, port_serveur_camera = 7000):
+    def __init__(self,IP="192.168.1.20", port_serveur_servo = 9000, port_serveur_camera = 7000):
         super().__init__()
         self.fig = Figure(figsize=(5, 4), dpi=100)
         self.ax = self.fig.add_subplot(111)
@@ -75,7 +75,6 @@ class GUI(Tk):
         self.wait_servo_i=0
         self.wait_servo()
         
-
 
         self.cam = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_address_cam = (IP, port_serveur_camera)
@@ -133,7 +132,7 @@ class GUI(Tk):
             if self.wait_servo_i>10:
                 print("Time Out")
                 syslog.syslog(syslog.LOG_ERR, "Time Out")
-                self._quit()
+                #self._quit()
             else:
                 self.wait_servo_i+=1
                 self.after(10000,self.wait_servo)
@@ -145,7 +144,7 @@ class GUI(Tk):
         print("Try number ",self.wait_cam_i," for camera")
         self.cam.settimeout(None)
         try:
-            self.cam.settimeout(1)
+            self.cam.settimeout(10)
             self.cam.connect(self.server_address_cam)
             print('connecting to {} port {}'.format(*self.server_address_cam))
             self.cam.send(b"0")
@@ -163,7 +162,7 @@ class GUI(Tk):
             if self.wait_cam_i>10:
                 print("Time Out")
                 syslog.syslog(syslog.LOG_ERR, "Time Out")
-                self._quit()
+                #self._quit()
             else:
                 self.wait_cam_i+=1
                 self.after(10000,self.wait_cam)
@@ -189,7 +188,7 @@ class GUI(Tk):
         if self.quit_info:
             self._quit()
 
-        self.after(1000,self.runtime_servo)
+        self.after(5000,self.runtime_servo)
 
     def runtime_camera(self):
         if self.camera_connected:
@@ -241,12 +240,12 @@ class GUI(Tk):
 
 if __name__ == "__main__":
     print("Launching " + sys.argv[0])
-    IP = "localhost"
+    IP = "192.168.1.20"
     port_camera = 7000
     port_servomoteur = 9000
     syslog.syslog(syslog.LOG_INFO, "Launching " + sys.argv[0] + "\n")
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hisc", ["help", "ip", "port_servomoteur", "port_camera"])
+        opts, args = getopt.getopt(sys.argv[1:], "h:i:s:c", ["help=", "ip=", "port_servomoteur=", "port_camera="])
     except getopt.GetoptError as err:
         print(err)
         print("\n")
@@ -258,13 +257,14 @@ if __name__ == "__main__":
         print("Quitting the program!")
         syslog.syslog(syslog.LOG_ERR, "Quitting the program!\n")
         sys.exit(2)
+    print(opts)
     for o, a in opts:
         if o in ("-h", "--help"):
             print("Options and arguments : ")
-            print("-h or --help : Display this help message")
-            print("-i or --ip : Default is localhost. Ip Address of the RPi on which the server is running. ")
-            print("-s or --port_servomoteur : Default is 9000. Port of the RPi on which the server managing the servomotor is running ")
-            print("-c or --port_camera : Default is 7000. Port of the RPi on which the server managing the camera is running")
+            print("-h or --help             | Display this help message")
+            print("-i or --ip               | Default is localhost. Ip Address of the RPi on which the server is running. ")
+            print("-s or --port_servomoteur | Default is 9000. Port of the RPi on which the server managing the servomotor is running ")
+            print("-c or --port_camera      | Default is 7000. Port of the RPi on which the server managing the camera is running")
             print("\n")
             print("Usage :")
             print("Servomotor_servo -i ip -s port_servomoteur -c port_camera")
@@ -276,9 +276,9 @@ if __name__ == "__main__":
         elif o in ("-i", "--ip"):
             IP = a
         elif o in ("-s", "--port_servomoteur"):
-            port_servomoteur = a
+            port_servomoteur = int(a)
         elif o in ("-c", "--port_camera"):
-            port_camera = a
+            port_camera = int(a)
         else:
             assert False, "unhandled option"
             print("Quitting the program!")

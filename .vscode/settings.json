@@ -2,6 +2,7 @@
     "python.linting.pylintEnabled": false,
     "files.associations": {
         "socket.h": "c",
-        "inet.h": "c"
+        "inet.h": "c",
+        "libv4l2.h": "c"
     }
 }
